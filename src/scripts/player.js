@@ -1,13 +1,19 @@
 const Player = (type = "human") => {
   const playerType = type;
-  const sendAttack = (coordinates, enemyGameBoard) => {
+  const attacksMade = [];
+  const sendAttack = (coordinates, enemyGameBoard) =>
     enemyGameBoard.receiveAttack(coordinates);
-  };
 
   const getRandomInclusive = (min, max) =>
     Math.floor(Math.random() * (max - min + 1) + min);
 
-  const calculateAttack = (enemyGameBoard) => {
+  const isAttackMade = (coordinates) =>
+    attacksMade.find(
+      (coordinate) =>
+        coordinate.x === coordinates.x && coordinate.y === coordinates.y,
+    );
+
+  const calculateAttack = () => {
     if (playerType !== "computer") {
       return {};
     }
@@ -16,7 +22,8 @@ const Player = (type = "human") => {
       const x = getRandomInclusive(0, 9);
       const y = getRandomInclusive(0, 9);
       coordinates = { x, y };
-    } while (enemyGameBoard.missedAttacks.includes(coordinates));
+    } while (isAttackMade(coordinates));
+    attacksMade.push(coordinates);
     return coordinates;
   };
   return { sendAttack, calculateAttack };

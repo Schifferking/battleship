@@ -4,6 +4,7 @@ const Gameboard = () => {
   const grid = [];
   const missedAttacks = [];
   const range = (num) => [...Array(num).keys()];
+
   const placeShip = (coordinates, shipLength, direction) => {
     const newShip = Ship(shipLength);
     const shipRange = range(shipLength);
@@ -40,9 +41,10 @@ const Gameboard = () => {
     const shipFound = isShip(cellContent);
     if (shipFound) {
       cellContent.hit();
-    } else {
-      cb(coordinates);
+      return true;
     }
+    cb(coordinates);
+    return false;
   };
 
   const getAllShips = () => {
