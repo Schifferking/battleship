@@ -178,6 +178,10 @@ export default function DOM() {
       computerCoordinates,
       humanGameboard,
     );
+    computerPlayer.registerAttack({
+      coordinates: computerCoordinates,
+      result: computerResult,
+    });
     const cell = args.myGameboard.querySelector(
       `div[data-x-coordinate="${computerCoordinates.x}"][data-y-coordinate="${computerCoordinates.y}"]`,
     );
