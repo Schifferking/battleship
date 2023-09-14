@@ -2,12 +2,34 @@ const Gameboard = require("./gameboard");
 const Player = require("./player");
 
 const Game = () => {
-  const populateGameboard = (gameboard) => {
-    gameboard.placeShip({ x: 1, y: 3 }, 1, "horizontal");
-    gameboard.placeShip({ x: 7, y: 7 }, 2, "vertical");
-    gameboard.placeShip({ x: 4, y: 3 }, 3, "horizontal");
-    gameboard.placeShip({ x: 0, y: 8 }, 4, "vertical");
-    gameboard.placeShip({ x: 7, y: 0 }, 5, "horizontal");
+  const getRandomIndex = (arrayLength) =>
+    Math.floor(Math.random() * arrayLength);
+
+  const populateGameboard = (computerGameboard) => {
+    const shipLengths = [2, 3, 4, 5];
+    const validCoordinates = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const directions = ["horizontal", "vertical"];
+    while (!computerGameboard.isMaxShipCountReached()) {
+      const randomCoordinates = {
+        x: validCoordinates[getRandomIndex(10)],
+        y: validCoordinates[getRandomIndex(10)],
+      };
+      const randomShipLength = shipLengths[getRandomIndex(4)];
+      const randomDirection = directions[getRandomIndex(2)];
+      if (
+        computerGameboard.canShipBePlaced(
+          randomCoordinates,
+          randomShipLength,
+          randomDirection,
+        )
+      ) {
+        computerGameboard.placeShip(
+          randomCoordinates,
+          randomShipLength,
+          randomDirection,
+        );
+      }
+    }
   };
 
   const createObjects = () => {

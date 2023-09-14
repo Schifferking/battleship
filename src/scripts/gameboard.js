@@ -64,7 +64,21 @@ const Gameboard = () => {
     return shipCoordinates;
   };
 
+  const calculateEndIndex = (coordinates, shipLength, direction) => {
+    if (direction === "vertical") {
+      return coordinates.x + shipLength;
+    }
+    return coordinates.y + shipLength;
+  };
+
+  const isNumberInRange = (num) => num <= 9;
+
   const canShipBePlaced = (coordinates, shipLength, direction) => {
+    const endIndex = calculateEndIndex(coordinates, shipLength, direction);
+    if (!isNumberInRange(endIndex)) {
+      return false;
+    }
+
     let surroundCells = getSurroundCells(coordinates);
     const shipCoordinates = getShipCoordinates(
       coordinates,
