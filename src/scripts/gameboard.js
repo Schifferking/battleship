@@ -3,7 +3,79 @@ const Ship = require("./ship");
 const Gameboard = () => {
   const grid = [];
   const missedAttacks = [];
+  const maxShipCount = 5;
+  let shipCount = 0;
+
+  const getShipCount = () => shipCount;
   const range = (num) => [...Array(num).keys()];
+
+  const isMaxShipCountReached = () => getShipCount() >= maxShipCount;
+
+  const isCellEmpty = (cellValue) =>
+    JSON.stringify(cellValue) === JSON.stringify({});
+
+  const isCoordinatevalid = (coordinate) => coordinate >= 0 && coordinate <= 9;
+
+  const areCoordinatesValid = (coordinates) =>
+    isCoordinatevalid(coordinates.x) && isCoordinatevalid(coordinates.y);
+
+  const getSurroundCoordinates = (coordinates) => {
+    const { x } = coordinates;
+    const { y } = coordinates;
+    const surroundCoordinates = [
+      { x: x - 1, y: y - 1 },
+      { x: x - 1, y },
+      { x: x - 1, y: y + 1 },
+      { x, y: y - 1 },
+      { x, y },
+      { x, y: y + 1 },
+      { x: x + 1, y: y - 1 },
+      { x: x + 1, y },
+      { x: x + 1, y: y + 1 },
+    ];
+    return surroundCoordinates.filter((sCoordinates) =>
+      areCoordinatesValid(sCoordinates),
+    );
+  };
+
+  const getSurroundCells = (coordinates) => {
+    const surroundCoordinates = getSurroundCoordinates(coordinates);
+    const surroundCells = [];
+    surroundCoordinates.forEach((sCoordinates) =>
+      surroundCells.push(grid[sCoordinates.x][sCoordinates.y]),
+    );
+    return surroundCells;
+  };
+
+  const getShipCoordinates = (coordinates, shipLength, direction) => {
+    const shipRange = range(shipLength);
+    let index = direction === "vertical" ? coordinates.x : coordinates.y;
+    const shipCoordinates = [];
+    let cellCoordinate;
+    shipRange.forEach(() => {
+      if (direction === "vertical") {
+        cellCoordinate = { x: index, y: coordinates.y };
+      } else {
+        cellCoordinate = { x: coordinates.x, y: index };
+      }
+      shipCoordinates.push(cellCoordinate);
+      index += 1;
+    });
+    return shipCoordinates;
+  };
+
+  const canShipBePlaced = (coordinates, shipLength, direction) => {
+    let surroundCells = getSurroundCells(coordinates);
+    const shipCoordinates = getShipCoordinates(
+      coordinates,
+      shipLength,
+      direction,
+    );
+    return shipCoordinates.every((shipCoordinate) => {
+      surroundCells = getSurroundCells(shipCoordinate);
+      return surroundCells.every((cell) => isCellEmpty(cell));
+    });
+  };
 
   const placeShip = (coordinates, shipLength, direction) => {
     const newShip = Ship(shipLength);
@@ -15,6 +87,7 @@ const Gameboard = () => {
         grid[coordinates.x][coordinates.y + i] = newShip;
       }
     });
+    shipCount = getShipCount() + 1;
   };
 
   const createGrid = () => {
@@ -61,7 +134,9 @@ const Gameboard = () => {
   createGrid();
   return {
     missedAttacks,
+    canShipBePlaced,
     getGrid,
+    isMaxShipCountReached,
     placeShip,
     receiveAttack,
     areAllShipsSunk,

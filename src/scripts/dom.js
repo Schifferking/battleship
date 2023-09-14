@@ -31,6 +31,86 @@ export default function DOM() {
     return button;
   };
 
+  const createInput = (args) => {
+    const input = document.createElement("input");
+    Object.assign(input, args);
+    return input;
+  };
+
+  const createLabel = (text) => {
+    const label = document.createElement("label");
+    label.textContent = text;
+    return label;
+  };
+
+  const createSubmitButton = () => {
+    const submit = document.createElement("button");
+    submit.setAttribute("type", "submit");
+    submit.textContent = "Place ship";
+    return submit;
+  };
+
+  const createShipFormElement = (textLabel, args) => {
+    const label = createLabel(textLabel);
+    const input = createInput(args);
+    label.appendChild(input);
+    return label;
+  };
+
+  const createShipForm = () => {
+    const formContainer = createDiv({ className: "form-container" });
+    const form = document.createElement("form");
+    const xCoordinate = createShipFormElement("* x coordinate: ", {
+      type: "number",
+      min: "0",
+      max: "9",
+      placeholder: "0",
+      name: "x-coordinate",
+    });
+    const yCoordinate = createShipFormElement("* y coordinate: ", {
+      type: "number",
+      min: "0",
+      max: "9",
+      placeholder: "0",
+      name: "y-coordinate",
+    });
+    const lengthLabel = createShipFormElement("* Ship length: ", {
+      type: "number",
+      min: "2",
+      max: "5",
+      placeholder: "2",
+      name: "ship-length",
+    });
+    const radioButtonsContainer = createDiv({
+      className: "radio-buttons-container",
+      textContent: "* Direction: ",
+    });
+    const horizontal = createShipFormElement("horizontal", {
+      type: "radio",
+      name: "direction",
+      value: "horizontal",
+      checked: true,
+    });
+    const vertical = createShipFormElement("vertical", {
+      type: "radio",
+      name: "direction",
+      value: "vertical",
+    });
+
+    const errorMessage = createDiv({ className: "error-message" });
+    radioButtonsContainer.append(horizontal, vertical);
+    form.append(
+      xCoordinate,
+      yCoordinate,
+      lengthLabel,
+      radioButtonsContainer,
+      errorMessage,
+      createSubmitButton(),
+    );
+    formContainer.appendChild(form);
+    return formContainer;
+  };
+
   const getLetter = (column) => {
     switch (column) {
       case 2:
@@ -55,41 +135,19 @@ export default function DOM() {
         return "J";
       // no default
     }
-  };
 
-  const addButton = (args) => {
-    const elementCopy = args.element.cloneNode();
-    const button = createButton("cell");
-    elementCopy.classList.add("enemy-cell");
-    elementCopy.appendChild(button);
-    return elementCopy;
-  };
-
-  const loadShip = (args) => {
-    const cellCopy = args.element.cloneNode();
-    const cellValue =
-      args.gameboardGridObject[args.coordinates.x][args.coordinates.y];
-    if (JSON.stringify(cellValue) !== JSON.stringify({})) {
-      cellCopy.classList.add("ship");
-    }
-    return cellCopy;
+    return undefined;
   };
 
   const createCell = (args) => {
-    let cell = createDiv();
+    const cell = createDiv();
     const { row } = args;
     const { column } = args;
-    const { humanGameboardGrid } = args;
 
     if (row >= 2 && column >= 2) {
       cell.classList = "cell-container";
       cell.setAttribute("data-x-coordinate", row - 2);
       cell.setAttribute("data-y-coordinate", column - 2);
-      cell = args.cb({
-        element: cell,
-        gameboardGridObject: humanGameboardGrid,
-        coordinates: { x: row - 2, y: column - 2 },
-      });
     } else if (row >= 2 && column === 1) {
       cell.classList.add("number");
       cell.textContent = `${row - 1}`;
@@ -126,17 +184,17 @@ export default function DOM() {
 
   const loadMain = (args) => {
     const main = document.createElement("main");
+    const gameboards = createDiv({ className: "gameboards" });
     const mainPlayerGameboard = loadGameboard({
       ...args,
       text: "Your grid",
-      cb: loadShip,
     });
     const trackingPlayerGameboard = loadGameboard({
       ...args,
       text: "Your enemy grid",
-      cb: addButton,
     });
-    main.append(mainPlayerGameboard, trackingPlayerGameboard);
+    gameboards.append(mainPlayerGameboard, trackingPlayerGameboard);
+    main.append(createShipForm(), gameboards);
     body.insertBefore(main, script);
   };
 
@@ -213,12 +271,12 @@ export default function DOM() {
     main.appendChild(p);
   };
 
-  const addEnemeyGameboardListener = (args) => {
+  const addEnemyGameboardListener = (args) => {
     const enemyGameboard = document.querySelector(
-      "main > div:nth-child(2) > div:first-child",
+      ".gameboards > div:nth-child(2) > div:first-child",
     );
     const myGameboard = document.querySelector(
-      "main > div:first-child > div:first-child",
+      ".gameboards > div:first-child > div:first-child",
     );
     enemyGameboard.addEventListener("click", (event) => {
       if (event.target.matches("button")) {
@@ -233,17 +291,101 @@ export default function DOM() {
     });
   };
 
+  const getShipCell = (x, y) =>
+    document.querySelector(
+      `div[data-x-coordinate="${x}"][data-y-coordinate="${y}"]`,
+    );
+
+  const getShipCells = (args) => {
+    const range = [...Array(Number(args.shipLength)).keys()];
+    const shipCells = [];
+    let index = args.newIndex;
+    let cell;
+    range.forEach(() => {
+      if (args.direction === "vertical") {
+        cell = getShipCell(index, args.coordinates.y);
+      } else {
+        cell = getShipCell(args.coordinates.x, index);
+      }
+      shipCells.push(cell);
+      index += 1;
+    });
+    return shipCells;
+  };
+
+  const renderShip = (shipCells) => {
+    shipCells.forEach((shipCell) => {
+      shipCell.classList.add("ship");
+    });
+  };
+
+  const addFormListener = (args) => {
+    const form = document.querySelector("form");
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const xCoordinate = form.elements["x-coordinate"].value;
+      const yCoordinate = form.elements["y-coordinate"].value;
+      const shipLength = form.elements["ship-length"].value;
+      const direction = form.elements.direction.value;
+      const formData = [xCoordinate, yCoordinate, shipLength, direction];
+      const errorMessage = document.querySelector(".error-message");
+      if (formData.some((element) => element === "")) {
+        errorMessage.textContent = "Missing at least a value";
+        return false;
+      }
+      if (args.humanGameboard.isMaxShipCountReached()) {
+        form.remove();
+        const enemyGameboard = document.querySelectorAll(
+          ".gameboards > div:nth-child(2) > div > .cell-container",
+        );
+        enemyGameboard.forEach((cell) => {
+          cell.appendChild(createButton("button"));
+          cell.classList.add("enemy-cell");
+        });
+        addEnemyGameboardListener({
+          humanPlayer: args.humanPlayer,
+          humanGameboard: args.humanGameboard,
+          computerPlayer: args.computerPlayer,
+          computerGameboard: args.computerGameboard,
+          isGameOver: args.isGameOver,
+        });
+        return true;
+      }
+      const coordinates = { x: Number(xCoordinate), y: Number(yCoordinate) };
+      const newIndex = direction === "vertical" ? coordinates.x : coordinates.y;
+      if (newIndex + Number(shipLength) > 10) {
+        errorMessage.textContent =
+          "Ship can't be placed there. Try to lower at least one coordinate or ship length.";
+        return false;
+      }
+      const canShipBePlaced = args.humanGameboard.canShipBePlaced(
+        coordinates,
+        Number(shipLength),
+        direction,
+      );
+      if (!canShipBePlaced) {
+        errorMessage.textContent =
+          "Ship can't be placed there. Ensure that all ships have one empty space between each other.";
+        return false;
+      }
+      args.humanGameboard.placeShip(coordinates, Number(shipLength), direction);
+      const shipCells = getShipCells({
+        shipLength: Number(shipLength),
+        direction,
+        newIndex,
+        coordinates,
+      });
+      renderShip(shipCells);
+      errorMessage.textContent = "";
+      return true;
+    });
+  };
+
   const loadPage = (args) => {
     loadHeader();
     loadMain(args);
     loadFooter();
-    addEnemeyGameboardListener({
-      humanPlayer: args.humanPlayer,
-      humanGameboard: args.humanGameboard,
-      computerPlayer: args.computerPlayer,
-      computerGameboard: args.computerGameboard,
-      isGameOver: args.isGameOver,
-    });
+    addFormListener(args);
   };
 
   return { loadPage };

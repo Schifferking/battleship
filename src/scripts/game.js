@@ -14,7 +14,6 @@ const Game = () => {
     const humanPlayer = Player();
     const computerPlayer = Player("computer");
     const humanGameboard = Gameboard();
-    populateGameboard(humanGameboard);
     const humanTrackingGameboard = Gameboard();
     const computerGameboard = Gameboard();
     populateGameboard(computerGameboard);
