@@ -200,6 +200,8 @@ export default function DOM() {
 
   const loadFooter = () => {
     const footer = document.createElement("footer");
+    footer.textContent =
+      "© 2023 Copyright: Generic Battleship app name is not an actual brand.";
     body.insertBefore(footer, script);
   };
 
